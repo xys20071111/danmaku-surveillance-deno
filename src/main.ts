@@ -41,30 +41,48 @@ websocket.addEventListener('message', (event) => {
 danmakuEvent.on('ROOM_BLOCK_MSG', (room: number, msg: any) => {
     printLog('全局弹幕监视', `房间${room}禁言了 ${msg['uname']} UID:${msg['uid']}`)
     db.execute("INSERT INTO `event`(`room`, `uid`, `nickname`, `type`) VALUES (?,?,?,?)", [room, msg['uid'], msg['uname'], 1])
-        .catch(() => { printErr('全局弹幕监视', '写事件日志失败') })
+        .catch((err) => {
+            printErr('全局弹幕监视', '写事件日志失败')
+            printErr('全局弹幕监视', err)
+    })
 })
 danmakuEvent.on('INTERACT_WORD', (room: number, msg: any) => {
     printLog('全局弹幕监视', `用户${msg['uname']} UID: ${msg['uid']} 进入了房间 ${room}`)
     db.execute("INSERT INTO `event`(`room`, `uid`, `nickname`, `type`) VALUES (?,?,?,?)", [room, msg['uid'], msg['uname'], 0])
-        .catch(() => { printErr('全局弹幕监视', '写事件日志失败') })
+        .catch((err) => {
+            printErr('全局弹幕监视', '写事件日志失败')
+            printErr('全局弹幕监视', err)
+        })
 })
 danmakuEvent.on('DANMU_MSG', (room: number, msg: Array<any>) => {
     printLog('全局弹幕监视', `用户${msg[2][1]} UID:${msg[2][0]} 在房间 ${room} 发送弹幕: ${msg[1]}`)
     db.execute("INSERT INTO `danmaku`(`room`, `uid`, `nickname`, `text`) VALUES (?,?,?,?)", [room, msg[2][0], msg[2][1], msg[1]])
-        .catch(() => { printErr('全局弹幕监视', '写弹幕日志失败') })
+        .catch((err) => {
+            printErr('全局弹幕监视', '写弹幕日志失败')
+            printErr('全局弹幕监视', err)
+        })
 })
 danmakuEvent.on('SUPER_CHAT_MESSAGE', (room: number, msg: any) => {
     printLog('全局弹幕监视', `用户${msg['user_info']['uname']} UID:${msg['uid']} 在房间 ${room} 发送 ${msg['price']}元SC: ${msg['message']}`)
-    db.execute("INSERT INTO `superchat`(`room`, `uid`, `nickname`, `text`, `price`) VALUES (?,?,?,?)", [room, msg['uid'], msg['user_info']['uname'], msg['message'], msg['price']])
-        .catch(() => { printErr('全局弹幕监视', '写醒目留言日志失败') })
+    db.execute("INSERT INTO `superchat`(`room`, `uid`, `nickname`, `text`, `price`) VALUES (?,?,?,?,?)", [room, msg['uid'], msg['user_info']['uname'], msg['message'], msg['price']])
+        .catch((err) => { 
+            printErr('全局弹幕监视', '写醒目留言日志失败')
+            printErr('全局弹幕监视', err)
+        })
 })
 danmakuEvent.on('SEND_GIFT', (room: number, msg: any) => {
     printLog('全局弹幕监视', `${msg['uname']} 投喂了${msg['super_gift_num']}个 ${msg['giftName']} 价值${msg['price'] / 1000 * msg['super_gift_num']}元\n`)
     db.execute("INSERT INTO `gift`(`room`, `uid`, `nickname`, `price`) VALUES (?,?,?,?)", [room, msg['uid'], msg['uname'], msg['price'] / 1000 * msg['super_gift_num']])
-        .catch(() => { printErr('全局弹幕监视', '写礼物日志失败') })
+        .catch((err) => {
+            printErr('全局弹幕监视', '写礼物日志失败')
+            printErr('全局弹幕监视', err)
+        })
 })
 danmakuEvent.on('GUARD_BUY', (room: number, msg: any) => {
     printLog('全局弹幕监视', `${msg['username']}:${msg['uid']} 购买了 ${msg['gift_name']}`)
     db.execute("INSERT INTO `guard`(`room`, `uid`, `nickname`, `type`) VALUES (?,?,?,?)", [room, msg['uid'], msg['username'], msg['gift_name']])
-        .catch(() => { printErr('全局弹幕监视', '写舰长日志失败') })
+        .catch((err) => {
+            printErr('全局弹幕监视', '写舰长日志失败')
+            printErr('全局弹幕监视', err)
+        })
 })
