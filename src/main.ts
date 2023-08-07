@@ -4,12 +4,15 @@ import { printLog, printErr } from './utils/mod.ts'
 import { config } from './config.ts'
 import { db } from './db.ts'
 
-await db.execute("CREATE TABLE IF NOT EXISTS `danmaku` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` VARCHAR(255) NOT NULL , `medal_name` VARCHAR(255), `medal_level` INT, `room` BIGINT UNSIGNED NOT NULL , `text` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB; ")
-await db.execute("CREATE TABLE IF NOT EXISTS `event` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` VARCHAR(255) NOT NULL , `room` BIGINT UNSIGNED NOT NULL, `type` INT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB; ")
-await db.execute("CREATE TABLE IF NOT EXISTS `superchat` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` VARCHAR(255) NOT NULL , `room` BIGINT UNSIGNED NOT NULL , `price` INT NOT NULL , `text` TEXT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB; ")
-await db.execute("CREATE TABLE IF NOT EXISTS `gift` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` TEXT NOT NULL , `room` BIGINT UNSIGNED NOT NULL, `price` DOUBLE UNSIGNED NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;")
-await db.execute("CREATE TABLE IF NOT EXISTS `guard` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` VARCHAR(255) NOT NULL , `room` BIGINT UNSIGNED NOT NULL , `type` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;")
-
+try {
+    await db.execute("CREATE TABLE IF NOT EXISTS `danmaku` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` VARCHAR(255) NOT NULL , `medal_name` VARCHAR(255), `medal_level` INT, `room` BIGINT UNSIGNED NOT NULL , `text` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB; ")
+    await db.execute("CREATE TABLE IF NOT EXISTS `event` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` VARCHAR(255) NOT NULL , `room` BIGINT UNSIGNED NOT NULL, `type` INT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB; ")
+    await db.execute("CREATE TABLE IF NOT EXISTS `superchat` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` VARCHAR(255) NOT NULL , `room` BIGINT UNSIGNED NOT NULL , `price` INT NOT NULL , `text` TEXT NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB; ")
+    await db.execute("CREATE TABLE IF NOT EXISTS `gift` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` TEXT NOT NULL , `room` BIGINT UNSIGNED NOT NULL, `price` DOUBLE UNSIGNED NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;")
+    await db.execute("CREATE TABLE IF NOT EXISTS `guard` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT , `date` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP , `uid` BIGINT UNSIGNED NOT NULL , `nickname` VARCHAR(255) NOT NULL , `room` BIGINT UNSIGNED NOT NULL , `type` VARCHAR(255) NOT NULL , PRIMARY KEY (`id`)) ENGINE = InnoDB;")
+} catch (e) {
+    printErr('全局弹幕监视', '初始化数据库失败')
+}
 const danmakuEvent = new EventEmitter()
 const websocket = new WebSocket(`ws://127.0.0.1:${config.apiPort}`)
 
@@ -34,7 +37,7 @@ danmakuEvent.on('ROOM_BLOCK_MSG', (room: number, msg: any) => {
         .catch((err) => {
             printErr('全局弹幕监视', '写事件日志失败')
             printErr('全局弹幕监视', err)
-    })
+        })
 })
 danmakuEvent.on('INTERACT_WORD', (room: number, msg: any) => {
     printLog('全局弹幕监视', `用户${msg['uname']} UID: ${msg['uid']} 进入了房间 ${room}`)
@@ -55,7 +58,7 @@ danmakuEvent.on('DANMU_MSG', (room: number, msg: Array<any>) => {
 danmakuEvent.on('SUPER_CHAT_MESSAGE', (room: number, msg: any) => {
     printLog('全局弹幕监视', `用户${msg['user_info']['uname']} UID:${msg['uid']} 在房间 ${room} 发送 ${msg['price']}元SC: ${msg['message']}`)
     db.execute("INSERT INTO `superchat`(`room`, `uid`, `nickname`, `text`, `price`) VALUES (?,?,?,?,?)", [room, msg['uid'], msg['user_info']['uname'], msg['message'], msg['price']])
-        .catch((err) => { 
+        .catch((err) => {
             printErr('全局弹幕监视', '写醒目留言日志失败')
             printErr('全局弹幕监视', err)
         })
